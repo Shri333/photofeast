@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "202689525822",
+    "project_id": "photofeast-1",
+    "storage_bucket": "photofeast-1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:202689525822:android:5e3d04e787612fd783396f",
+        "android_client_info": {
+          "package_name": "com.example.photofeast"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-iW1j-dEbaZ1VbPWGZc66E-ISvOShcrw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
