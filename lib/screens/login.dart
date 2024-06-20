@@ -1,8 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:photofeast/helpers/snackbar.dart';
+import 'package:photofeast/helpers/alert.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,7 +14,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _loginFormKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _hidePassword = true, _loading = false, _loginError = false;
+  bool _hidePassword = true, _loading = false;
+  String? _emailErrorText, _passwordErrorText;
 
   @override
   void dispose() {
@@ -27,8 +27,6 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _emailValidator(String? value) {
     if (value == null || value.isEmpty) {
       return 'Please enter your email';
-    } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-      return 'Please enter a valid email address';
     }
     return null;
   }
@@ -46,7 +44,48 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
+  Future<void> _forgotPassword() async {
+    final email = _emailController.text;
+    if (email.isEmpty) {
+      setState(() {
+        _emailErrorText = 'Please enter your email';
+      });
+      return;
+    }
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('Reset Password'),
+        content: Text(
+            'Are you sure you want to send a password reset email to $email?'),
+        actions: [
+          FilledButton.tonal(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text('No'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              try {
+                await FirebaseAuth.instance
+                    .sendPasswordResetEmail(email: email);
+              } catch (e) {
+                print(e);
+              }
+              Navigator.of(context).pop();
+            },
+            child: const Text('Yes'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _login() async {
+    setState(() {
+      _emailErrorText = _passwordErrorText = null;
+    });
     if (!_loginFormKey.currentState!.validate()) {
       return;
     }
@@ -57,13 +96,28 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: password);
-    } on FirebaseAuthException {
-      setState(() {
-        _loginError = true;
-      });
+    } on FirebaseAuthException catch (e) {
+      switch (e.code) {
+        case 'invalid-email':
+          setState(() {
+            _emailErrorText = 'Please enter a valid email address';
+          });
+        case 'user-disabled':
+          setState(() {
+            _emailErrorText = 'The user with the given email has been disabled';
+          });
+        case 'invalid-credential' || 'user-not-found' || 'wrong-password':
+          setState(() {
+            _emailErrorText = _passwordErrorText = 'Wrong email or password';
+          });
+        default:
+          if (mounted) {
+            showErrorAlert(context);
+          }
+      }
     } catch (e) {
       if (mounted) {
-        showErrorSnackbar(context);
+        showErrorAlert(context);
       }
     } finally {
       setState(() {
@@ -93,19 +147,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 32.0),
-                  if (_loginError)
-                    Text(
-                      'Invalid username or password. ',
-                      style: themeData.textTheme.bodyMedium
-                          ?.copyWith(color: themeData.colorScheme.error),
-                    ),
-                  if (_loginError) const SizedBox(height: 8.0),
                   TextFormField(
                     controller: _emailController,
                     decoration: InputDecoration(
                       prefixIcon: const Icon(Icons.mail),
                       labelText: 'Email',
-                      error: _loginError ? const SizedBox.shrink() : null,
+                      errorText: _emailErrorText,
                       border: const UnderlineInputBorder(),
                     ),
                     validator: _emailValidator,
@@ -117,7 +164,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     decoration: InputDecoration(
                       prefixIcon: const Icon(Icons.lock),
                       labelText: 'Password',
-                      error: _loginError ? const SizedBox.shrink() : null,
+                      errorText: _passwordErrorText,
                       border: const UnderlineInputBorder(),
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -130,20 +177,17 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     validator: _passwordValidator,
                   ),
-                  const SizedBox(height: 16.0),
-                  SizedBox(
-                    width: double.infinity,
-                    child: GestureDetector(
-                      onTap: () {},
-                      child: Text(
-                        'Forgot password?',
-                        style: themeData.textTheme.bodyMedium
-                            ?.copyWith(color: Colors.blue),
-                        textAlign: TextAlign.end,
+                  const SizedBox(height: 4.0),
+                  Row(
+                    children: [
+                      const Spacer(),
+                      TextButton(
+                        onPressed: _forgotPassword,
+                        child: const Text('Forgot Password?'),
                       ),
-                    ),
+                    ],
                   ),
-                  const SizedBox(height: 16.0),
+                  const SizedBox(height: 4.0),
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton(
@@ -158,27 +202,18 @@ class _LoginScreenState extends State<LoginScreen> {
                           : const Text('Login'),
                     ),
                   ),
-                  const SizedBox(height: 16.0),
-                  RichText(
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text: 'Don\'t have an account? ',
-                          style: themeData.textTheme.bodyMedium,
-                        ),
-                        TextSpan(
-                          text: 'Sign up',
-                          style: themeData.textTheme.bodyMedium?.copyWith(
-                            color: Colors.blue,
-                          ),
-                          recognizer: TapGestureRecognizer()
-                            ..onTap = () {
-                              context.go('/signup');
-                            },
-                        ),
-                      ],
-                    ),
-                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('Don\'t have an account?'),
+                      TextButton(
+                        onPressed: () {
+                          context.go('/signup');
+                        },
+                        child: const Text('Sign up'),
+                      )
+                    ],
+                  )
                 ],
               ),
             ),

@@ -22,9 +22,7 @@ class MainApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'Photofeast',
       routerConfig: router,
-      theme: ThemeData(
-        useMaterial3: true,
-      ),
+      theme: ThemeData(useMaterial3: true),
     );
   }
 }

@@ -1,8 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:photofeast/helpers/snackbar.dart';
+import 'package:photofeast/helpers/alert.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -30,8 +29,6 @@ class _SignupScreenState extends State<SignupScreen> {
   String? _emailValidator(String? value) {
     if (value == null || value.isEmpty) {
       return 'Please enter your email';
-    } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-      return 'Please enter a valid email address';
     }
     return null;
   }
@@ -60,6 +57,9 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   Future<void> _signup() async {
+    setState(() {
+      _emailErrorText = _passwordErrorText = null;
+    });
     if (!_signupFormKey.currentState!.validate()) {
       return;
     }
@@ -76,18 +76,22 @@ class _SignupScreenState extends State<SignupScreen> {
           setState(() {
             _emailErrorText = 'This email is already in use';
           });
+        case 'invalid-email':
+          setState(() {
+            _emailErrorText = 'Please enter a valid email';
+          });
         case 'weak-password':
           setState(() {
             _passwordErrorText = 'Password is too weak';
           });
         default:
           if (mounted) {
-            showErrorSnackbar(context);
+            showErrorAlert(context);
           }
       }
     } catch (e) {
       if (mounted) {
-        showErrorSnackbar(context);
+        showErrorAlert(context);
       }
     } finally {
       setState(() {
@@ -154,6 +158,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     decoration: InputDecoration(
                       prefixIcon: const Icon(Icons.lock),
                       labelText: 'Confirm password',
+                      errorText: _passwordErrorText,
                       border: const UnderlineInputBorder(),
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -181,27 +186,18 @@ class _SignupScreenState extends State<SignupScreen> {
                           : const Text('Signup'),
                     ),
                   ),
-                  const SizedBox(height: 16.0),
-                  RichText(
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text: 'Already have an account? ',
-                          style: themeData.textTheme.bodyMedium,
-                        ),
-                        TextSpan(
-                          text: 'Log in',
-                          style: themeData.textTheme.bodyMedium?.copyWith(
-                            color: Colors.blue,
-                          ),
-                          recognizer: TapGestureRecognizer()
-                            ..onTap = () {
-                              context.go('/login');
-                            },
-                        ),
-                      ],
-                    ),
-                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('Already have an account?'),
+                      TextButton(
+                        onPressed: () {
+                          context.go('/login');
+                        },
+                        child: const Text('Log in'),
+                      )
+                    ],
+                  )
                 ],
               ),
             ),
