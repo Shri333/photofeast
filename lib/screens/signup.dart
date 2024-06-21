@@ -82,7 +82,7 @@ class _SignupScreenState extends State<SignupScreen> {
           });
         case 'weak-password':
           setState(() {
-            _passwordErrorText = 'Password is too weak';
+            _passwordErrorText = 'Password must be at least 6 characters';
           });
         default:
           if (mounted) {
