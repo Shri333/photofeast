@@ -11,7 +11,7 @@ Future<void> showAlert(BuildContext context, String title, String message) {
       title: Text(title),
       content: Text(message),
       actions: [
-        TextButton(
+        FilledButton(
           onPressed: () {
             Navigator.of(context).pop();
           },

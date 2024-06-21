@@ -52,34 +52,32 @@ class _LoginScreenState extends State<LoginScreen> {
       });
       return;
     }
-    return showDialog(
-      context: context,
-      builder: (BuildContext context) => AlertDialog(
-        title: const Text('Reset Password'),
-        content: Text(
-            'Are you sure you want to send a password reset email to $email?'),
-        actions: [
-          FilledButton.tonal(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: const Text('No'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              try {
-                await FirebaseAuth.instance
-                    .sendPasswordResetEmail(email: email);
-              } catch (e) {
-                print(e);
-              }
-              Navigator.of(context).pop();
-            },
-            child: const Text('Yes'),
-          ),
-        ],
-      ),
-    );
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      if (mounted) {
+        showAlert(context, 'Password Reset',
+            'A password reset email has been sent to $email');
+      }
+    } on FirebaseAuthException catch (e) {
+      switch (e.code) {
+        case 'invalid-email':
+          setState(() {
+            _emailErrorText = 'Please enter a valid email address';
+          });
+        case 'user-not-found':
+          setState(() {
+            _emailErrorText = 'No user exists with the given email';
+          });
+        default:
+          if (mounted) {
+            showErrorAlert(context);
+          }
+      }
+    } catch (e) {
+      if (mounted) {
+        showErrorAlert(context);
+      }
+    }
   }
 
   Future<void> _login() async {
