@@ -5,7 +5,10 @@ import 'package:go_router/go_router.dart';
 
 import 'providers/user.dart';
 import 'screens/home.dart';
+import 'screens/ingredients.dart';
 import 'screens/login.dart';
+import 'screens/profile.dart';
+import 'screens/recipes.dart';
 import 'screens/signup.dart';
 
 class AppRouter {
@@ -17,20 +20,46 @@ class AppRouter {
     config = GoRouter(
       routes: [
         GoRoute(
-          path: '/',
-          builder: (context, state) => const HomeScreen(),
-          redirect: _homeRedirect,
-        ),
-        GoRoute(
           path: '/login',
           builder: (context, state) => const LoginScreen(),
-          redirect: _authRedirect,
+          redirect: _redirectToHome,
         ),
         GoRoute(
           path: '/signup',
           builder: (context, state) => const SignupScreen(),
-          redirect: _authRedirect,
-        )
+          redirect: _redirectToHome,
+        ),
+        GoRoute(
+          path: '/',
+          redirect: (context, state) => '/ingredients',
+        ),
+        ShellRoute(
+          builder: (context, state, child) => HomeScreen(
+            routerState: state,
+            child: child,
+          ),
+          routes: [
+            GoRoute(
+              path: HomeRoute.ingredients.path,
+              pageBuilder: (context, state) => const NoTransitionPage(
+                child: IngredientsScreen(),
+              ),
+            ),
+            GoRoute(
+              path: HomeRoute.recipes.path,
+              pageBuilder: (context, state) => const NoTransitionPage(
+                child: RecipesScreen(),
+              ),
+            ),
+            GoRoute(
+              path: HomeRoute.profile.path,
+              pageBuilder: (context, state) => const NoTransitionPage(
+                child: ProfileScreen(),
+              ),
+            )
+          ],
+          redirect: _redirectToAuth,
+        ),
       ],
       initialLocation: '/login',
     );
@@ -45,7 +74,7 @@ class AppRouter {
     return container.read(userProvider);
   }
 
-  String? _homeRedirect(BuildContext context, GoRouterState state) {
+  String? _redirectToAuth(BuildContext context, GoRouterState state) {
     final user = _user(context);
     if (user case AsyncData(:final value) when value == null) {
       return '/login';
@@ -53,7 +82,7 @@ class AppRouter {
     return null;
   }
 
-  String? _authRedirect(BuildContext context, GoRouterState state) {
+  String? _redirectToHome(BuildContext context, GoRouterState state) {
     final user = _user(context);
     if (user case AsyncData(:final value) when value != null) {
       return '/';
