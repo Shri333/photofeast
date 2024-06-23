@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
-Future<void> showErrorAlert(BuildContext context) async {
-  return showAlert(context, 'Error', 'An unknown error occurred');
+Future<void> showErrorAlert(
+  BuildContext context, [
+  String message = 'An unknown error occurred',
+]) async {
+  return showAlert(context, 'Error', message);
 }
 
 Future<void> showAlert(BuildContext context, String title, String message) {

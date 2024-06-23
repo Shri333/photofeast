@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:photofeast/widgets/spinner.dart';
 
 import '../helpers/alert.dart';
 
@@ -177,14 +178,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     width: double.infinity,
                     child: FilledButton(
                       onPressed: _loading ? null : _signup,
-                      child: _loading
-                          ? const SizedBox(
-                              height: 24.0,
-                              width: 24.0,
-                              child:
-                                  CircularProgressIndicator(strokeWidth: 2.0),
-                            )
-                          : const Text('Signup'),
+                      child: _loading ? const Spinner() : const Text('Signup'),
                     ),
                   ),
                   Row(

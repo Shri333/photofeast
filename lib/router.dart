@@ -33,30 +33,36 @@ class AppRouter {
           path: '/',
           redirect: (context, state) => '/ingredients',
         ),
-        ShellRoute(
+        StatefulShellRoute.indexedStack(
           builder: (context, state, child) => HomeScreen(
             routerState: state,
             child: child,
           ),
-          routes: [
-            GoRoute(
-              path: HomeRoute.ingredients.path,
-              pageBuilder: (context, state) => const NoTransitionPage(
-                child: IngredientsScreen(),
+          branches: [
+            StatefulShellBranch(routes: [
+              GoRoute(
+                path: HomeRoute.ingredients.path,
+                pageBuilder: (context, state) => const NoTransitionPage(
+                  child: IngredientsScreen(),
+                ),
               ),
-            ),
-            GoRoute(
-              path: HomeRoute.recipes.path,
-              pageBuilder: (context, state) => const NoTransitionPage(
-                child: RecipesScreen(),
+            ]),
+            StatefulShellBranch(routes: [
+              GoRoute(
+                path: HomeRoute.recipes.path,
+                pageBuilder: (context, state) => const NoTransitionPage(
+                  child: RecipesScreen(),
+                ),
               ),
-            ),
-            GoRoute(
-              path: HomeRoute.profile.path,
-              pageBuilder: (context, state) => const NoTransitionPage(
-                child: ProfileScreen(),
+            ]),
+            StatefulShellBranch(routes: [
+              GoRoute(
+                path: HomeRoute.profile.path,
+                pageBuilder: (context, state) => const NoTransitionPage(
+                  child: ProfileScreen(),
+                ),
               ),
-            )
+            ]),
           ],
           redirect: _redirectToAuth,
         ),
