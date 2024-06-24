@@ -1,4 +1,4 @@
-import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,82 +6,72 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:photofeast/helpers/alert.dart';
-import 'package:photofeast/widgets/spinner.dart';
+
+import '../helpers/alert.dart';
+import '../services/generative_ai.dart';
+import '../services/image.dart';
+import '../widgets/spinner.dart';
 
 class IngredientsScreen extends ConsumerStatefulWidget {
   const IngredientsScreen({super.key});
 
   @override
-  ConsumerState<IngredientsScreen> createState() => _IngredilentsScreenState();
+  ConsumerState<IngredientsScreen> createState() => _IngredientsScreenState();
 }
 
-class _IngredilentsScreenState extends ConsumerState<IngredientsScreen> {
-  static const _apiKey = '';
-
-  static const _prompt = '''
-  What are the ingredients you see in the image? Return your answer
-  as a list of strings in JSON format. Output no other text. Only
-  list ingredients that are part of recipes and can be used to make
-  edible food. If there are no ingredients in the image, return an
-  empty JSON body like "{}". Only add ingredients to the list if you
-  are absolutely sure that they are ingredients for food.
-  ''';
-
-  final _imagePicker = ImagePicker();
-  final _model = GenerativeModel(
-    model: 'gemini-1.5-flash-latest',
-    apiKey: _apiKey,
-  );
+class _IngredientsScreenState extends ConsumerState<IngredientsScreen> {
+  final _imageService = ImageService();
+  final _generativeAIService = GenerativeAIService();
 
   bool _loading = false;
   List<String> _ingredients = [];
 
-  Future<void> generateIngredients(XFile image) async {
+  @override
+  void initState() {
+    super.initState();
+    if (Platform.isAndroid) {
+      _loading = true;
+      _getLostData();
+    }
+  }
+
+  Future<void> _getLostData() async {
+    final image = await _imageService.getLostData();
+    if (image != null) {
+      await _generateIngredients(image);
+    }
+    setState(() {
+      _loading = false;
+    });
+  }
+
+  Future<void> _generateIngredients(Uint8List image) async {
     try {
-      final bytes = await image.readAsBytes();
-      final content = [
-        Content.multi([
-          TextPart(_prompt),
-          DataPart('image/jpeg', bytes),
-        ])
-      ];
-      final response = await _model.generateContent(content);
-      if (response.text == null) {
-        if (mounted) {
-          showErrorAlert(context, 'Failed to generate ingredients');
-        }
-        return;
-      }
-      final Map<String, dynamic> decoded = jsonDecode(response.text!);
-      if (decoded.containsKey("ingredients") &&
-          decoded['ingredients'] is List) {
+      final ingredients = await _generativeAIService.generateIngredients(image);
+      if (ingredients != null) {
         setState(() {
-          _ingredients = List<String>.from(decoded['ingredients']);
+          _ingredients = ingredients;
         });
       } else if (mounted) {
         showErrorAlert(context, 'Failed to find ingredients in image');
       }
-    } on GenerativeAIException {
+    } on GenerativeAIException catch (e) {
       if (mounted) {
-        showErrorAlert(context, 'Failed to generate ingredients');
+        showErrorAlert(context, e.message);
       }
     }
   }
 
-  Future<void> fromCamera() async {
+  Future<void> _pickImage(ImageSource source) async {
     try {
-      final image = await _imagePicker.pickImage(source: ImageSource.camera);
+      final image = await _imageService.pickImage(source);
       if (image == null) {
-        if (mounted) {
-          showErrorAlert(context, 'Failed to retrieve photo');
-        }
         return;
       }
       setState(() {
         _loading = true;
       });
-      await generateIngredients(image);
+      await _generateIngredients(image);
     } on PlatformException {
       if (mounted) {
         showErrorAlert(context, 'Failed to access camera');
@@ -95,6 +85,14 @@ class _IngredilentsScreenState extends ConsumerState<IngredientsScreen> {
         _loading = false;
       });
     }
+  }
+
+  Future<void> _pickFromCamera() async {
+    _pickImage(ImageSource.camera);
+  }
+
+  Future<void> _pickFromGallery() async {
+    _pickImage(ImageSource.gallery);
   }
 
   @override
@@ -132,7 +130,7 @@ class _IngredilentsScreenState extends ConsumerState<IngredientsScreen> {
           bottom: 24.0,
           right: 24.0,
           child: FloatingActionButton(
-            onPressed: _loading ? null : fromCamera,
+            onPressed: _loading ? null : _pickFromCamera,
             backgroundColor: _loading
                 ? Colors.grey[300]
                 : themeData.floatingActionButtonTheme.backgroundColor,

@@ -12,11 +12,15 @@ import 'screens/recipes.dart';
 import 'screens/signup.dart';
 
 class AppRouter {
-  static final _instance = AppRouter._privateConstructor();
-
   late final GoRouter config;
 
-  AppRouter._privateConstructor() {
+  static final _instance = AppRouter._();
+
+  factory AppRouter() {
+    return _instance;
+  }
+
+  AppRouter._() {
     config = GoRouter(
       routes: [
         GoRoute(
@@ -69,10 +73,6 @@ class AppRouter {
       ],
       initialLocation: '/login',
     );
-  }
-
-  factory AppRouter() {
-    return _instance;
   }
 
   AsyncValue<User?> _user(BuildContext context) {
