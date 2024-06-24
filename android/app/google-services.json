@@ -12,7 +12,20 @@
           "package_name": "com.example.photofeast"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "202689525822-cqe7rvarubc0cc0bp3bg8b532kjbpafc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.photofeast",
+            "certificate_hash": "1c3a4b7c04f9495c43289919b6d031805bef3e53"
+          }
+        },
+        {
+          "client_id": "202689525822-8ofg1rrevcsbqur46nl9e33jgub0tmbi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyD-iW1j-dEbaZ1VbPWGZc66E-ISvOShcrw"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "202689525822-8ofg1rrevcsbqur46nl9e33jgub0tmbi.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "202689525822-0m0kkli0atp8hk1l7392gfv9qdf01s17.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.photofeast"
+              }
+            }
+          ]
         }
       }
     }

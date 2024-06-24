@@ -120,9 +120,11 @@ class _LoginScreenState extends State<LoginScreen> {
         showErrorAlert(context);
       }
     } finally {
-      setState(() {
-        _loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
     }
   }
 

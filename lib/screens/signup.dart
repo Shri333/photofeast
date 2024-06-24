@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -70,8 +71,15 @@ class _SignupScreenState extends State<SignupScreen> {
       _loading = true;
     });
     try {
-      await FirebaseAuth.instance
+      final userCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: email, password: password);
+      final user = userCredential.user;
+      if (user != null) {
+        await FirebaseFirestore.instance
+            .collection('ingredients')
+            .doc(user.uid)
+            .set({'ingredients': []});
+      }
     } on FirebaseAuthException catch (e) {
       switch (e.code) {
         case 'email-already-in-use':
@@ -91,14 +99,20 @@ class _SignupScreenState extends State<SignupScreen> {
             showErrorAlert(context);
           }
       }
+    } on FirebaseException catch (e) {
+      if (mounted && e.message != null) {
+        showErrorAlert(context, e.message!);
+      }
     } catch (e) {
       if (mounted) {
         showErrorAlert(context);
       }
     } finally {
-      setState(() {
-        _loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
     }
   }
 
