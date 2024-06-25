@@ -186,6 +186,11 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                     ),
                     validator: _confirmPasswordValidator,
+                    onFieldSubmitted: (value) {
+                      if (!_loading) {
+                        _signup();
+                      }
+                    },
                   ),
                   const SizedBox(height: 24.0),
                   SizedBox(

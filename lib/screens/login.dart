@@ -178,6 +178,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     validator: _passwordValidator,
+                    onFieldSubmitted: (value) {
+                      if (!_loading) {
+                        _login();
+                      }
+                    },
                   ),
                   const SizedBox(height: 4.0),
                   Row(

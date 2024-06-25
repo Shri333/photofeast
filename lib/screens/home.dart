@@ -18,12 +18,14 @@ enum HomeRoute {
 
   String get path => '/${name.toLowerCase()}';
 
-  static HomeRoute? route(String path) => switch (path) {
-        '/ingredients' => HomeRoute.ingredients,
-        '/recipes' => HomeRoute.recipes,
-        '/profile' => HomeRoute.profile,
-        _ => null,
-      };
+  static HomeRoute? route(String path) {
+    return switch (path) {
+      '/ingredients' => HomeRoute.ingredients,
+      '/recipes' => HomeRoute.recipes,
+      '/profile' => HomeRoute.profile,
+      _ => null,
+    };
+  }
 }
 
 class HomeScreen extends StatefulWidget {
@@ -107,7 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
             selectedIconTheme: _themeData.iconTheme.copyWith(
               color: _themeData.primaryColor,
             ),
-            selectedLabelTextStyle: _themeData.textTheme.bodyLarge?.copyWith(
+            selectedLabelTextStyle: _themeData.textTheme.bodySmall?.copyWith(
               color: _themeData.primaryColor,
             ),
             selectedIndex: _index,
@@ -127,9 +129,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     _window = Window.fromContext(context);
     _themeData = Theme.of(context);
-    if (_window == Window.compact) {
-      return _buildWithBottomBar();
-    }
-    return _buildWithNavRail();
+    return _window == Window.compact
+        ? _buildWithBottomBar()
+        : _buildWithNavRail();
   }
 }

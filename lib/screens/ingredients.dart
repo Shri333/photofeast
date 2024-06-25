@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -25,14 +26,18 @@ class IngredientsScreen extends ConsumerStatefulWidget {
 class _IngredientsScreenState extends ConsumerState<IngredientsScreen> {
   final _imageService = ImageService();
   final _generativeAIService = GenerativeAIService();
+  final _ingredientController = TextEditingController();
 
-  bool _loading = false;
+  final Map<ImageSource, bool> _loading = {
+    ImageSource.camera: false,
+    ImageSource.gallery: false
+  };
 
   @override
   void initState() {
     super.initState();
-    if (Platform.isAndroid) {
-      _loading = true;
+    if (!kIsWeb && Platform.isAndroid) {
+      _loading[ImageSource.camera] = _loading[ImageSource.gallery] = true;
       _getLostData();
     }
   }
@@ -43,7 +48,7 @@ class _IngredientsScreenState extends ConsumerState<IngredientsScreen> {
       await _generateIngredients(image);
     }
     setState(() {
-      _loading = false;
+      _loading[ImageSource.camera] = _loading[ImageSource.gallery] = false;
     });
   }
 
@@ -63,7 +68,18 @@ class _IngredientsScreenState extends ConsumerState<IngredientsScreen> {
     }
   }
 
-  Future<void> _deleteIngredient(List<String> ingredients, int index) async {
+  void _addIngredient(List<String> ingredients, String ingredient) {
+    if (ingredient.isEmpty) {
+      return;
+    }
+    if (ingredients.contains(ingredient)) {
+      showErrorAlert(context, '$ingredient already exists');
+      return;
+    }
+    _setIngredients(ingredients + [ingredient]);
+  }
+
+  void _deleteIngredient(List<String> ingredients, int index) {
     ingredients.removeAt(index);
     _setIngredients(ingredients);
   }
@@ -90,7 +106,7 @@ class _IngredientsScreenState extends ConsumerState<IngredientsScreen> {
         return;
       }
       setState(() {
-        _loading = true;
+        _loading[source] = true;
       });
       await _generateIngredients(image);
     } on PlatformException {
@@ -103,7 +119,7 @@ class _IngredientsScreenState extends ConsumerState<IngredientsScreen> {
       }
     } finally {
       setState(() {
-        _loading = false;
+        _loading[source] = false;
       });
     }
   }
@@ -116,49 +132,112 @@ class _IngredientsScreenState extends ConsumerState<IngredientsScreen> {
     _pickImage(ImageSource.gallery);
   }
 
-  ListView _buildListView(List<String> ingredients) {
-    return ListView.builder(
-      itemCount: ingredients.length,
-      itemBuilder: (context, index) => Slidable(
-        key: UniqueKey(),
-        startActionPane: ActionPane(
-          motion: const ScrollMotion(),
-          dismissible: DismissiblePane(onDismissed: () {
-            _deleteIngredient(ingredients, index);
-          }),
-          children: [
-            SlidableAction(
-              onPressed: (context) {
-                _deleteIngredient(ingredients, index);
-              },
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-              icon: Icons.delete,
-              label: 'Delete',
-            ),
-          ],
+  Slidable _buildIngredient(List<String> ingredients, int index) {
+    return Slidable(
+      key: UniqueKey(),
+      startActionPane: ActionPane(
+        motion: const ScrollMotion(),
+        dismissible: DismissiblePane(onDismissed: () {
+          _deleteIngredient(ingredients, index);
+        }),
+        children: [
+          SlidableAction(
+            onPressed: (context) {
+              _deleteIngredient(ingredients, index);
+            },
+            backgroundColor: Colors.red,
+            foregroundColor: Colors.white,
+            icon: Icons.delete,
+            label: 'Delete',
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          ListTile(
+            title: Text(ingredients[index]),
+          ),
+          const Divider(height: 0),
+        ],
+      ),
+    );
+  }
+
+  TextField _buildIngredientTextField(List<String> ingredients) {
+    return TextField(
+      controller: _ingredientController,
+      decoration: InputDecoration(
+        contentPadding: const EdgeInsets.all(16.0),
+        hintText: 'add new ingredient',
+        hintStyle: TextStyle(
+          fontWeight: FontWeight.w400,
+          color: Colors.grey[500],
         ),
-        child: Column(
-          children: [
-            ListTile(
-              title: Text(ingredients[index]),
-            ),
-            const Divider(height: 0),
-          ],
+        enabledBorder: UnderlineInputBorder(
+          borderSide: BorderSide(
+            color: Colors.grey[300]!,
+          ),
         ),
       ),
+      onSubmitted: (value) {
+        final ingredient = value.trim().toLowerCase();
+        _addIngredient(ingredients, ingredient);
+        _ingredientController.clear();
+      },
+    );
+  }
+
+  ListView _buildIngredients(List<String> ingredients) {
+    return ListView.builder(
+      itemCount: ingredients.length + 1,
+      itemBuilder: (context, index) => index == ingredients.length
+          ? _buildIngredientTextField(ingredients)
+          : _buildIngredient(ingredients, index),
+    );
+  }
+
+  Column _buildCameraButtons() {
+    final themeData = Theme.of(context);
+    return Column(
+      children: [
+        FloatingActionButton(
+          heroTag: UniqueKey(),
+          onPressed: _loading[ImageSource.gallery]! ? null : _pickFromGallery,
+          backgroundColor: _loading[ImageSource.gallery]!
+              ? Colors.grey[300]
+              : themeData.floatingActionButtonTheme.backgroundColor,
+          child: _loading[ImageSource.gallery]!
+              ? const Spinner(size: 20.0)
+              : const Icon(Icons.photo),
+        ),
+        if (!kIsWeb)
+          const SizedBox(
+            height: 16.0,
+          ),
+        if (!kIsWeb)
+          FloatingActionButton(
+            heroTag: UniqueKey(),
+            onPressed: _loading[ImageSource.camera]! ? null : _pickFromCamera,
+            backgroundColor: _loading[ImageSource.camera]!
+                ? Colors.grey[300]
+                : themeData.floatingActionButtonTheme.backgroundColor,
+            child: _loading[ImageSource.camera]!
+                ? const Spinner(size: 20.0)
+                : const Icon(Icons.photo_camera),
+          ),
+      ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final ingredients = ref.watch(ingredientsProvider);
-    final themeData = Theme.of(context);
     return Stack(
       fit: StackFit.expand,
       children: [
         (switch (ingredients) {
-          AsyncData(:final value) when value != null => _buildListView(value),
+          AsyncData(:final value) when value != null =>
+            _buildIngredients(value),
           AsyncLoading() => const Center(child: Spinner()),
           _ =>
             const Center(child: Text('There was an error fetching ingredients'))
@@ -166,15 +245,7 @@ class _IngredientsScreenState extends ConsumerState<IngredientsScreen> {
         Positioned(
           bottom: 24.0,
           right: 24.0,
-          child: FloatingActionButton(
-            onPressed: _loading ? null : _pickFromCamera,
-            backgroundColor: _loading
-                ? Colors.grey[300]
-                : themeData.floatingActionButtonTheme.backgroundColor,
-            child: _loading
-                ? const Spinner(size: 20.0)
-                : const Icon(Icons.photo_camera),
-          ),
+          child: _buildCameraButtons(),
         )
       ],
     );
