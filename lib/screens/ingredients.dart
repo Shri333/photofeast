@@ -68,6 +68,18 @@ class _IngredientsScreenState extends ConsumerState<IngredientsScreen> {
     }
   }
 
+  void _addIngredients(
+    List<String> oldIngredients,
+    List<String> newIngredients,
+  ) {
+    final ingredients = List<String>.from(
+      Set<String>.from(oldIngredients).union(
+        Set<String>.from(newIngredients),
+      ),
+    );
+    _setIngredients(ingredients);
+  }
+
   void _addIngredient(List<String> ingredients, String ingredient) {
     if (ingredient.isEmpty) {
       return;
@@ -86,9 +98,12 @@ class _IngredientsScreenState extends ConsumerState<IngredientsScreen> {
 
   Future<void> _generateIngredients(Uint8List image) async {
     try {
-      final ingredients = await _generativeAIService.generateIngredients(image);
-      if (ingredients != null) {
-        await _setIngredients(ingredients);
+      final oldIngredients = ref.read(ingredientsProvider);
+      final newIngredients =
+          await _generativeAIService.generateIngredients(image);
+      if (oldIngredients case AsyncData(:final value)
+          when value != null && newIngredients != null) {
+        _addIngredients(value, newIngredients);
       } else if (mounted) {
         showErrorAlert(context, 'Failed to find ingredients in image');
       }

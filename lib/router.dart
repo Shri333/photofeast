@@ -75,24 +75,22 @@ class AppRouter {
     );
   }
 
-  AsyncValue<User?> _user(BuildContext context) {
+  User? _getUser(BuildContext context) {
     final container = ProviderScope.containerOf(context);
-    return container.read(userProvider);
+    final user = container.read(userProvider);
+    if (user case AsyncData(:final value)) {
+      return value;
+    }
+    return null;
   }
 
   String? _redirectToAuth(BuildContext context, GoRouterState state) {
-    final user = _user(context);
-    if (user case AsyncData(:final value) when value == null) {
-      return '/login';
-    }
-    return null;
+    final user = _getUser(context);
+    return user == null ? '/login' : null;
   }
 
   String? _redirectToHome(BuildContext context, GoRouterState state) {
-    final user = _user(context);
-    if (user case AsyncData(:final value) when value != null) {
-      return '/';
-    }
-    return null;
+    final user = _getUser(context);
+    return user != null ? '/' : null;
   }
 }
