@@ -251,11 +251,10 @@ class _IngredientsScreenState extends ConsumerState<IngredientsScreen> {
       fit: StackFit.expand,
       children: [
         (switch (ingredients) {
+          AsyncLoading() => const Center(child: Spinner()),
           AsyncData(:final value) when value != null =>
             _buildIngredients(value),
-          AsyncLoading() => const Center(child: Spinner()),
-          _ =>
-            const Center(child: Text('There was an error fetching ingredients'))
+          _ => _buildIngredients([]),
         }),
         Positioned(
           bottom: 24.0,
