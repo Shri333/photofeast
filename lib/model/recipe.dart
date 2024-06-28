@@ -1,5 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:photofeast/model/ingredient.dart';
+
+import 'ingredient.dart';
 
 part 'recipe.g.dart';
 
