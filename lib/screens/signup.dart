@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../helpers/alert.dart';
+import '../widgets/scroll.dart';
 import '../widgets/spinner.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -112,99 +113,102 @@ class _SignupScreenState extends State<SignupScreen> {
   Widget build(BuildContext context) {
     final themeData = Theme.of(context);
     return Scaffold(
-      body: Center(
-        child: SizedBox(
-          width: 480.0,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32.0),
-            child: Form(
-              key: _signupFormKey,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Signup',
-                    style: themeData.textTheme.displayMedium?.copyWith(
-                      color: themeData.primaryColor,
-                    ),
-                  ),
-                  const SizedBox(height: 32.0),
-                  TextFormField(
-                    controller: _emailController,
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.mail),
-                      labelText: 'Email',
-                      errorText: _emailErrorText,
-                      border: const UnderlineInputBorder(),
-                    ),
-                    validator: _emailValidator,
-                  ),
-                  const SizedBox(height: 8.0),
-                  TextFormField(
-                    controller: _passwordController,
-                    obscureText: _hidePassword,
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.lock),
-                      labelText: 'Password',
-                      errorText: _passwordErrorText,
-                      border: const UnderlineInputBorder(),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _hidePassword
-                              ? Icons.visibility
-                              : Icons.visibility_off,
-                        ),
-                        onPressed: _toggleHidePassword,
+      body: Scroll(
+        child: Center(
+          child: SizedBox(
+            width: 480.0,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32.0),
+              child: Form(
+                key: _signupFormKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Signup',
+                      style: themeData.textTheme.displayMedium?.copyWith(
+                        color: themeData.primaryColor,
                       ),
                     ),
-                    validator: _passwordValidator,
-                  ),
-                  const SizedBox(height: 8.0),
-                  TextFormField(
-                    controller: _confirmPasswordController,
-                    obscureText: _hidePassword,
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.lock),
-                      labelText: 'Confirm password',
-                      errorText: _passwordErrorText,
-                      border: const UnderlineInputBorder(),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _hidePassword
-                              ? Icons.visibility
-                              : Icons.visibility_off,
+                    const SizedBox(height: 32.0),
+                    TextFormField(
+                      controller: _emailController,
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.mail),
+                        labelText: 'Email',
+                        errorText: _emailErrorText,
+                        border: const UnderlineInputBorder(),
+                      ),
+                      validator: _emailValidator,
+                    ),
+                    const SizedBox(height: 8.0),
+                    TextFormField(
+                      controller: _passwordController,
+                      obscureText: _hidePassword,
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.lock),
+                        labelText: 'Password',
+                        errorText: _passwordErrorText,
+                        border: const UnderlineInputBorder(),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _hidePassword
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                          ),
+                          onPressed: _toggleHidePassword,
                         ),
-                        onPressed: _toggleHidePassword,
+                      ),
+                      validator: _passwordValidator,
+                    ),
+                    const SizedBox(height: 8.0),
+                    TextFormField(
+                      controller: _confirmPasswordController,
+                      obscureText: _hidePassword,
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.lock),
+                        labelText: 'Confirm password',
+                        errorText: _passwordErrorText,
+                        border: const UnderlineInputBorder(),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _hidePassword
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                          ),
+                          onPressed: _toggleHidePassword,
+                        ),
+                      ),
+                      validator: _confirmPasswordValidator,
+                      onFieldSubmitted: (value) {
+                        if (!_loading) {
+                          _signup();
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 24.0),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: _loading ? null : _signup,
+                        child:
+                            _loading ? const Spinner() : const Text('Signup'),
                       ),
                     ),
-                    validator: _confirmPasswordValidator,
-                    onFieldSubmitted: (value) {
-                      if (!_loading) {
-                        _signup();
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 24.0),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: _loading ? null : _signup,
-                      child: _loading ? const Spinner() : const Text('Signup'),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('Already have an account?'),
+                        TextButton(
+                          onPressed: () {
+                            context.go('/login');
+                          },
+                          child: const Text('Log in'),
+                        )
+                      ],
                     ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text('Already have an account?'),
-                      TextButton(
-                        onPressed: () {
-                          context.go('/login');
-                        },
-                        child: const Text('Log in'),
-                      )
-                    ],
-                  )
-                ],
+                  ],
+                ),
               ),
             ),
           ),

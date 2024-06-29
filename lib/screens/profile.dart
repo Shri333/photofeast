@@ -7,6 +7,7 @@ import '../providers/firestore_items.dart';
 import '../providers/preferences.dart';
 import '../providers/user.dart';
 import '../services/firestore_items.dart';
+import '../widgets/scroll.dart';
 import '../widgets/spinner.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -117,82 +118,77 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (user case AsyncData(:final value) when value != null) {
       return Padding(
         padding: const EdgeInsets.all(24.0),
-        child: CustomScrollView(
-          slivers: [
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: Column(
-                children: [
-                  Text(
-                    'Profile',
-                    style: themeData.textTheme.displayMedium?.copyWith(
-                      color: themeData.primaryColor,
-                    ),
-                  ),
-                  const SizedBox(height: 24.0),
-                  _buildProfileRow(
-                    Icons.email,
-                    Text(
-                      value.email!,
-                      style: themeData.textTheme.headlineSmall,
-                    ),
-                  ),
-                  const SizedBox(height: 24.0),
-                  _buildProfileRow(
-                    Icons.verified,
-                    _getVerifiedText(value),
-                  ),
-                  const SizedBox(height: 24.0),
-                  TextField(
-                    controller: _preferenceController,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'Add a dietary preference',
-                    ),
-                    onSubmitted: (value) {
-                      final preference = value.trim().toLowerCase();
-                      _addPreference(preferences, preference);
-                      _preferenceController.clear();
+        child: Scroll(
+          child: Column(
+            children: [
+              Text(
+                'Profile',
+                style: themeData.textTheme.displayMedium?.copyWith(
+                  color: themeData.primaryColor,
+                ),
+              ),
+              const SizedBox(height: 24.0),
+              _buildProfileRow(
+                Icons.email,
+                Text(
+                  value.email!,
+                  style: themeData.textTheme.headlineSmall,
+                ),
+              ),
+              const SizedBox(height: 24.0),
+              _buildProfileRow(
+                Icons.verified,
+                _getVerifiedText(value),
+              ),
+              const SizedBox(height: 24.0),
+              TextField(
+                controller: _preferenceController,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Add a dietary preference',
+                ),
+                onSubmitted: (value) {
+                  final preference = value.trim().toLowerCase();
+                  _addPreference(preferences, preference);
+                  _preferenceController.clear();
+                },
+              ),
+              const SizedBox(height: 8.0),
+              Wrap(
+                spacing: 4.0,
+                runSpacing: 2.0,
+                children: List<InputChip>.generate(
+                  preferences.length,
+                  (index) => InputChip(
+                    label: Text(preferences[index]),
+                    onDeleted: () {
+                      _removePreference(preferences, index);
                     },
                   ),
-                  const SizedBox(height: 8.0),
-                  Wrap(
-                    spacing: 4.0,
-                    runSpacing: 2.0,
-                    children: List<InputChip>.generate(
-                      preferences.length,
-                      (index) => InputChip(
-                        label: Text(preferences[index]),
-                        onDeleted: () {
-                          _removePreference(preferences, index);
-                        },
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  const SizedBox(height: 4.0),
-                  if (!value.emailVerified)
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton.tonal(
-                        onPressed: () {
-                          _verifyEmail(value);
-                        },
-                        child: const Text('Verify Email'),
-                      ),
-                    ),
-                  if (!value.emailVerified) const SizedBox(height: 4.0),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: FirebaseAuth.instance.signOut,
-                      child: const Text('Log Out'),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ],
+              const Spacer(),
+              const SizedBox(height: 4.0),
+              if (!value.emailVerified)
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.tonal(
+                    onPressed: () {
+                      _verifyEmail(value);
+                    },
+                    child: const Text('Verify Email'),
+                  ),
+                ),
+              if (!value.emailVerified) const SizedBox(height: 4.0),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: FirebaseAuth.instance.signOut,
+                  child: const Text('Log Out'),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }

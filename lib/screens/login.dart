@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../helpers/alert.dart';
+import '../widgets/scroll.dart';
 import '../widgets/spinner.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -132,89 +133,91 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final themeData = Theme.of(context);
     return Scaffold(
-      body: Center(
-        child: SizedBox(
-          width: 480.0,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32.0),
-            child: Form(
-              key: _loginFormKey,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Login',
-                    style: themeData.textTheme.displayMedium?.copyWith(
-                      color: themeData.primaryColor,
+      body: Scroll(
+        child: Center(
+          child: SizedBox(
+            width: 480.0,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32.0),
+              child: Form(
+                key: _loginFormKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Login',
+                      style: themeData.textTheme.displayMedium?.copyWith(
+                        color: themeData.primaryColor,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 32.0),
-                  TextFormField(
-                    controller: _emailController,
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.mail),
-                      labelText: 'Email',
-                      errorText: _emailErrorText,
-                      border: const UnderlineInputBorder(),
+                    const SizedBox(height: 32.0),
+                    TextFormField(
+                      controller: _emailController,
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.mail),
+                        labelText: 'Email',
+                        errorText: _emailErrorText,
+                        border: const UnderlineInputBorder(),
+                      ),
+                      validator: _emailValidator,
                     ),
-                    validator: _emailValidator,
-                  ),
-                  const SizedBox(height: 8.0),
-                  TextFormField(
-                    controller: _passwordController,
-                    obscureText: _hidePassword,
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.lock),
-                      labelText: 'Password',
-                      errorText: _passwordErrorText,
-                      border: const UnderlineInputBorder(),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _hidePassword
-                              ? Icons.visibility
-                              : Icons.visibility_off,
+                    const SizedBox(height: 8.0),
+                    TextFormField(
+                      controller: _passwordController,
+                      obscureText: _hidePassword,
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.lock),
+                        labelText: 'Password',
+                        errorText: _passwordErrorText,
+                        border: const UnderlineInputBorder(),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _hidePassword
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                          ),
+                          onPressed: _toggleHidePassword,
                         ),
-                        onPressed: _toggleHidePassword,
+                      ),
+                      validator: _passwordValidator,
+                      onFieldSubmitted: (value) {
+                        if (!_loading) {
+                          _login();
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 4.0),
+                    Row(
+                      children: [
+                        const Spacer(),
+                        TextButton(
+                          onPressed: _forgotPassword,
+                          child: const Text('Forgot Password?'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4.0),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: _loading ? null : _login,
+                        child: _loading ? const Spinner() : const Text('Login'),
                       ),
                     ),
-                    validator: _passwordValidator,
-                    onFieldSubmitted: (value) {
-                      if (!_loading) {
-                        _login();
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 4.0),
-                  Row(
-                    children: [
-                      const Spacer(),
-                      TextButton(
-                        onPressed: _forgotPassword,
-                        child: const Text('Forgot Password?'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4.0),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: _loading ? null : _login,
-                      child: _loading ? const Spinner() : const Text('Login'),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('Don\'t have an account?'),
+                        TextButton(
+                          onPressed: () {
+                            context.go('/signup');
+                          },
+                          child: const Text('Sign up'),
+                        )
+                      ],
                     ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text('Don\'t have an account?'),
-                      TextButton(
-                        onPressed: () {
-                          context.go('/signup');
-                        },
-                        child: const Text('Sign up'),
-                      )
-                    ],
-                  )
-                ],
+                  ],
+                ),
               ),
             ),
           ),
