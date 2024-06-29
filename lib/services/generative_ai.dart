@@ -30,10 +30,7 @@ class GenerativeAIService {
 
   GenerativeAIService._();
 
-  String _recipePrompt(
-    List<String> ingredients,
-    List<String> dietaryPreferences,
-  ) {
+  String _recipePrompt(List<String> ingredients, List<String> preferences) {
     return '''
       Generate a list of recipes using the given ingredients and dietary preferences.
       Return your output in JSON format. Output no other text. If you can't generate
@@ -45,7 +42,7 @@ class GenerativeAIService {
       OUTPUT: $sampleRecipes
       EXAMPLE_END
       Now, generate a list of recipes using $ingredients and dietary preferences
-      $dietaryPreferences.
+      $preferences.
     ''';
   }
 
@@ -68,11 +65,9 @@ class GenerativeAIService {
 
   Future<List<Recipe>?> generateRecipes(
     List<String> ingredients,
-    List<String> dietaryPreferences,
+    List<String> preferences,
   ) async {
-    final content = [
-      Content.text(_recipePrompt(ingredients, dietaryPreferences))
-    ];
+    final content = [Content.text(_recipePrompt(ingredients, preferences))];
     final response = await _model.generateContent(content);
     if (response.text != null) {
       final Map<String, dynamic> decoded = jsonDecode(response.text!);

@@ -10,8 +10,9 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../helpers/alert.dart';
+import '../providers/firestore_items.dart';
 import '../providers/ingredients.dart';
-import '../providers/user.dart';
+import '../services/firestore_items.dart';
 import '../services/generative_ai.dart';
 import '../services/image.dart';
 import '../widgets/spinner.dart';
@@ -27,15 +28,19 @@ class _IngredientsScreenState extends ConsumerState<IngredientsScreen> {
   final _imageService = ImageService();
   final _generativeAIService = GenerativeAIService();
   final _ingredientController = TextEditingController();
-
-  final Map<ImageSource, bool> _loading = {
+  final _loading = <ImageSource, bool>{
     ImageSource.camera: false,
     ImageSource.gallery: false
   };
 
+  late final FirestoreItemsService _ingredientsService;
+
   @override
   void initState() {
     super.initState();
+    _ingredientsService = ref.read(
+      firestoreItemsServiceProvider('ingredients'),
+    );
     if (!kIsWeb && Platform.isAndroid) {
       _loading[ImageSource.camera] = _loading[ImageSource.gallery] = true;
       _getLostData();
@@ -52,48 +57,39 @@ class _IngredientsScreenState extends ConsumerState<IngredientsScreen> {
     });
   }
 
-  Future<void> _setIngredients(List<String> ingredients) async {
+  Future<bool> _withFirebaseErrorHandling(
+    Future<bool> Function() callback,
+  ) async {
     try {
-      final user = ref.read(userProvider);
-      if (user case AsyncData(:final value) when value != null) {
-        await FirebaseFirestore.instance
-            .collection('ingredients')
-            .doc(value.uid)
-            .set({'ingredients': ingredients});
-      }
+      return await callback();
     } on FirebaseException catch (e) {
       if (mounted && e.message != null) {
         showErrorAlert(context, e.message!);
       }
     }
-  }
-
-  void _addIngredients(
-    List<String> oldIngredients,
-    List<String> newIngredients,
-  ) {
-    final ingredients = List<String>.from(
-      Set<String>.from(oldIngredients).union(
-        Set<String>.from(newIngredients),
-      ),
-    );
-    _setIngredients(ingredients);
+    return false;
   }
 
   void _addIngredient(List<String> ingredients, String ingredient) {
     if (ingredient.isEmpty) {
       return;
     }
-    if (ingredients.contains(ingredient)) {
-      showErrorAlert(context, '$ingredient already exists');
-      return;
-    }
-    _setIngredients(ingredients + [ingredient]);
+    _withFirebaseErrorHandling(() async {
+      final added = await _ingredientsService.addItem(
+        ingredients,
+        ingredient,
+      );
+      if (!added && mounted) {
+        showErrorAlert(context, '$ingredient already exists');
+      }
+      return added;
+    });
   }
 
-  void _deleteIngredient(List<String> ingredients, int index) {
-    ingredients.removeAt(index);
-    _setIngredients(ingredients);
+  void _removeIngredient(List<String> ingredients, int index) {
+    _withFirebaseErrorHandling(
+      () => _ingredientsService.removeItem(ingredients, index),
+    );
   }
 
   Future<void> _generateIngredients(Uint8List image) async {
@@ -103,7 +99,9 @@ class _IngredientsScreenState extends ConsumerState<IngredientsScreen> {
           await _generativeAIService.generateIngredients(image);
       if (oldIngredients case AsyncData(:final value)
           when value != null && newIngredients != null) {
-        _addIngredients(value, newIngredients);
+        _withFirebaseErrorHandling(
+          () => _ingredientsService.addItems(value, newIngredients),
+        );
       } else if (mounted) {
         showErrorAlert(context, 'Failed to find ingredients in image');
       }
@@ -153,12 +151,12 @@ class _IngredientsScreenState extends ConsumerState<IngredientsScreen> {
       startActionPane: ActionPane(
         motion: const ScrollMotion(),
         dismissible: DismissiblePane(onDismissed: () {
-          _deleteIngredient(ingredients, index);
+          _removeIngredient(ingredients, index);
         }),
         children: [
           SlidableAction(
             onPressed: (context) {
-              _deleteIngredient(ingredients, index);
+              _removeIngredient(ingredients, index);
             },
             backgroundColor: Colors.red,
             foregroundColor: Colors.white,

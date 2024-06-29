@@ -2,7 +2,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../helpers/alert.dart';
+import '../providers/firestore_items.dart';
+import '../providers/preferences.dart';
 import '../providers/user.dart';
+import '../services/firestore_items.dart';
 import '../widgets/spinner.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -13,49 +17,195 @@ class ProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  Widget _buildMainView(User user) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          Expanded(
-            child: Column(
-              children: [
-                Text('Email: ${user.email}'),
-                Text('Verified: ${user.emailVerified}'),
-              ],
+  final _preferenceController = TextEditingController();
+
+  late final FirestoreItemsService _preferencesService;
+
+  @override
+  void initState() {
+    super.initState();
+    _preferencesService = ref.read(
+      firestoreItemsServiceProvider('preferences'),
+    );
+  }
+
+  Future<bool> _withFirebaseErrorHandling(
+    Future<bool> Function() callback,
+  ) async {
+    try {
+      return await callback();
+    } on FirebaseException catch (e) {
+      if (mounted && e.message != null) {
+        showErrorAlert(context, e.message!);
+      }
+    }
+    return false;
+  }
+
+  void _addPreference(List<String> preferences, String preference) {
+    if (preference.isEmpty) {
+      return;
+    }
+    _withFirebaseErrorHandling(() async {
+      final added = await _preferencesService.addItem(
+        preferences,
+        preference,
+      );
+      if (!added && mounted) {
+        showErrorAlert(context, '$preference already exists');
+      }
+      return added;
+    });
+  }
+
+  void _removePreference(List<String> preferences, int index) {
+    _withFirebaseErrorHandling(
+      () => _preferencesService.removeItem(preferences, index),
+    );
+  }
+
+  Future<void> _verifyEmail(User user) async {
+    await user.sendEmailVerification();
+    if (mounted) {
+      showAlert(
+        context,
+        'Info',
+        'Sent verification email to ${user.email}',
+      );
+    }
+  }
+
+  Row _buildProfileRow(IconData icon, Text text) {
+    return Row(
+      children: [
+        Expanded(
+          flex: 1,
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 24.0),
+              child: Icon(icon),
             ),
           ),
-          if (!user.emailVerified)
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.tonal(
-                onPressed: () {},
-                child: const Text('Verify Email'),
+        ),
+        Expanded(
+          flex: 3,
+          child: text,
+        )
+      ],
+    );
+  }
+
+  Text _getVerifiedText(User user) {
+    final themeData = Theme.of(context);
+    final textTheme = themeData.textTheme.headlineSmall;
+    if (user.emailVerified) {
+      return Text(
+        'VERIFIED',
+        style: textTheme?.copyWith(color: Colors.green[500]),
+      );
+    }
+    return Text(
+      'NOT VERIFIED',
+      style: textTheme?.copyWith(color: Colors.red[500]),
+    );
+  }
+
+  Widget _buildMainView(List<String> preferences) {
+    final themeData = Theme.of(context);
+    final user = ref.read(userProvider);
+    if (user case AsyncData(:final value) when value != null) {
+      return Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: CustomScrollView(
+          slivers: [
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Column(
+                children: [
+                  Text(
+                    'Profile',
+                    style: themeData.textTheme.displayMedium?.copyWith(
+                      color: themeData.primaryColor,
+                    ),
+                  ),
+                  const SizedBox(height: 24.0),
+                  _buildProfileRow(
+                    Icons.email,
+                    Text(
+                      value.email!,
+                      style: themeData.textTheme.headlineSmall,
+                    ),
+                  ),
+                  const SizedBox(height: 24.0),
+                  _buildProfileRow(
+                    Icons.verified,
+                    _getVerifiedText(value),
+                  ),
+                  const SizedBox(height: 24.0),
+                  TextField(
+                    controller: _preferenceController,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: 'Add a dietary preference',
+                    ),
+                    onSubmitted: (value) {
+                      final preference = value.trim().toLowerCase();
+                      _addPreference(preferences, preference);
+                      _preferenceController.clear();
+                    },
+                  ),
+                  const SizedBox(height: 8.0),
+                  Wrap(
+                    spacing: 4.0,
+                    runSpacing: 2.0,
+                    children: List<InputChip>.generate(
+                      preferences.length,
+                      (index) => InputChip(
+                        label: Text(preferences[index]),
+                        onDeleted: () {
+                          _removePreference(preferences, index);
+                        },
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  const SizedBox(height: 4.0),
+                  if (!value.emailVerified)
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.tonal(
+                        onPressed: () {
+                          _verifyEmail(value);
+                        },
+                        child: const Text('Verify Email'),
+                      ),
+                    ),
+                  if (!value.emailVerified) const SizedBox(height: 4.0),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: FirebaseAuth.instance.signOut,
+                      child: const Text('Log Out'),
+                    ),
+                  ),
+                ],
               ),
             ),
-          if (!user.emailVerified) const SizedBox(height: 4.0),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: FirebaseAuth.instance.signOut,
-              child: const Text('Log Out'),
-            ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+    }
+    return const Center(child: Spinner());
   }
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(userProvider);
-    return switch (user) {
+    final preferences = ref.watch(preferencesProvider);
+    return switch (preferences) {
       AsyncLoading() => const Center(child: Spinner()),
       AsyncData(:final value) when value != null => _buildMainView(value),
-      _ => const Center(
-          child: Text('There was an error fetching user data'),
-        ),
+      _ => _buildMainView([]),
     };
   }
 }

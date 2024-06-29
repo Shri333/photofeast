@@ -44,8 +44,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _index = 0;
-  Window _window = Window.compact;
-  ThemeData _themeData = ThemeData();
 
   @override
   void didUpdateWidget(covariant HomeScreen oldWidget) {
@@ -62,18 +60,20 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   AppBar _buildAppBar() {
+    final themeData = Theme.of(context);
     return AppBar(
       title: Text(
         'Photofeast',
-        style: _themeData.textTheme.headlineSmall?.copyWith(
-          color: _themeData.colorScheme.onPrimary,
+        style: themeData.textTheme.headlineSmall?.copyWith(
+          color: themeData.colorScheme.onPrimary,
         ),
       ),
-      backgroundColor: _themeData.primaryColor,
+      backgroundColor: themeData.primaryColor,
     );
   }
 
   Widget _buildWithBottomBar() {
+    final themeData = Theme.of(context);
     return Scaffold(
       appBar: _buildAppBar(),
       body: widget.child,
@@ -85,7 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
               label: name,
             )
         ],
-        selectedItemColor: _themeData.primaryColor,
+        selectedItemColor: themeData.primaryColor,
         currentIndex: _index,
         onTap: _onIndexChange,
       ),
@@ -93,12 +93,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildWithNavRail() {
+    final themeData = Theme.of(context);
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: _buildAppBar(),
       body: Row(
         children: [
           NavigationRail(
-            extended: _window == Window.expanded,
+            extended: Window.fromContext(context) == Window.expanded,
             destinations: [
               for (final HomeRoute(:name, :iconData) in HomeRoute.values)
                 NavigationRailDestination(
@@ -106,11 +108,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   label: Text(name),
                 )
             ],
-            selectedIconTheme: _themeData.iconTheme.copyWith(
-              color: _themeData.primaryColor,
+            selectedIconTheme: themeData.iconTheme.copyWith(
+              color: themeData.primaryColor,
             ),
-            selectedLabelTextStyle: _themeData.textTheme.bodySmall?.copyWith(
-              color: _themeData.primaryColor,
+            selectedLabelTextStyle: themeData.textTheme.bodySmall?.copyWith(
+              color: themeData.primaryColor,
             ),
             selectedIndex: _index,
             onDestinationSelected: _onIndexChange,
@@ -127,9 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    _window = Window.fromContext(context);
-    _themeData = Theme.of(context);
-    return _window == Window.compact
+    return Window.fromContext(context) == Window.compact
         ? _buildWithBottomBar()
         : _buildWithNavRail();
   }
