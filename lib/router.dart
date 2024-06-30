@@ -8,8 +8,10 @@ import 'screens/home.dart';
 import 'screens/ingredients.dart';
 import 'screens/login.dart';
 import 'screens/profile.dart';
+import 'screens/recipe.dart';
 import 'screens/recipes.dart';
 import 'screens/signup.dart';
+import 'widgets/page_not_found.dart';
 
 class AppRouter {
   late final GoRouter config;
@@ -57,6 +59,16 @@ class AppRouter {
                 pageBuilder: (context, state) => const NoTransitionPage(
                   child: RecipesScreen(),
                 ),
+                routes: [
+                  GoRoute(
+                    path: ':recipeId',
+                    pageBuilder: (context, state) => NoTransitionPage(
+                      child: RecipeScreen(
+                        recipeId: state.pathParameters['recipeId'],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ]),
             StatefulShellBranch(routes: [
@@ -72,6 +84,9 @@ class AppRouter {
         ),
       ],
       initialLocation: '/login',
+      errorPageBuilder: (context, state) => const NoTransitionPage(
+        child: PageNotFoundWidget(),
+      ),
     );
   }
 

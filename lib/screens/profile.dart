@@ -76,27 +76,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
   }
 
-  Row _buildProfileRow(IconData icon, Text text) {
-    return Row(
-      children: [
-        Expanded(
-          flex: 1,
-          child: Align(
-            alignment: Alignment.centerRight,
-            child: Padding(
-              padding: const EdgeInsets.only(right: 24.0),
-              child: Icon(icon),
-            ),
-          ),
-        ),
-        Expanded(
-          flex: 3,
-          child: text,
-        )
-      ],
-    );
-  }
-
   Text _getVerifiedText(User user) {
     final themeData = Theme.of(context);
     final textTheme = themeData.textTheme.headlineSmall;
@@ -128,17 +107,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 24.0),
-              _buildProfileRow(
-                Icons.email,
-                Text(
-                  value.email!,
-                  style: themeData.textTheme.headlineSmall,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.email),
+                  const SizedBox(width: 24.0),
+                  Text(
+                    value.email!,
+                    style: themeData.textTheme.headlineSmall,
+                  ),
+                ],
               ),
               const SizedBox(height: 24.0),
-              _buildProfileRow(
-                Icons.verified,
-                _getVerifiedText(value),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.verified),
+                  const SizedBox(width: 24.0),
+                  (_getVerifiedText(value)),
+                ],
               ),
               const SizedBox(height: 24.0),
               TextField(

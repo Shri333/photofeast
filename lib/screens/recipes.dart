@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
 import '../helpers/alert.dart';
@@ -151,6 +152,9 @@ class _RecipesScreenState extends ConsumerState<RecipesScreen> {
               children: [
                 ListTile(
                   title: Text(recipes[index].name),
+                  onTap: () {
+                    context.go('/recipes/${recipes[index].id}');
+                  },
                 ),
                 const Divider(height: 0),
               ],

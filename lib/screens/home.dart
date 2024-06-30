@@ -19,6 +19,10 @@ enum HomeRoute {
   String get path => '/${name.toLowerCase()}';
 
   static HomeRoute? route(String path) {
+    final recipesRegExp = RegExp(r'^/recipes/[a-zA-Z0-9]{20}$');
+    if (recipesRegExp.hasMatch(path)) {
+      return HomeRoute.recipes;
+    }
     return switch (path) {
       '/ingredients' => HomeRoute.ingredients,
       '/recipes' => HomeRoute.recipes,
@@ -46,8 +50,18 @@ class _HomeScreenState extends State<HomeScreen> {
   int _index = 0;
 
   @override
+  void initState() {
+    super.initState();
+    _handlePath();
+  }
+
+  @override
   void didUpdateWidget(covariant HomeScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
+    _handlePath();
+  }
+
+  void _handlePath() {
     final path = widget.routerState.uri.path;
     final route = HomeRoute.route(path);
     if (route != null) {
