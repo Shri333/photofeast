@@ -3,8 +3,8 @@ const cookies = '''
   "name": "Vegan Peanut Butter Chocolate Chip Cookies",
   "description": "Delicious and chewy vegan peanut butter chocolate chip cookies. Perfect for a sweet treat without any animal products.",
   "servings": 24,
-  "prep_time": "15 minutes",
-  "cook_time": "10 minutes",
+  "prepTime": "15 minutes",
+  "cookTime": "10 minutes",
   "ingredients": [
     {
       "name": "Peanut Butter",
@@ -89,8 +89,8 @@ const sandwiches = '''
   "name": "Vegan Peanut Butter Chocolate Chip Sandwiches",
   "description": "A delightful and easy-to-make vegan snack combining the flavors of peanut butter and chocolate chips between slices of bread.",
   "servings": 4,
-  "prep_time": "10 minutes",
-  "cook_time": "0 minutes",
+  "prepTime": "10 minutes",
+  "cookTime": "0 minutes",
   "ingredients": [
     {
       "name": "Peanut Butter",
@@ -139,8 +139,8 @@ const pudding = '''
   "name": "Vegan Peanut Butter Chocolate Chip Bread Pudding",
   "description": "A rich and comforting vegan bread pudding with peanut butter and chocolate chips. Perfect for dessert or breakfast.",
   "servings": 8,
-  "prep_time": "20 minutes",
-  "cook_time": "40 minutes",
+  "prepTime": "20 minutes",
+  "cookTime": "40 minutes",
   "ingredients": [
     {
       "name": "Stale Bread",

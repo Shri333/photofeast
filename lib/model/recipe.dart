@@ -4,8 +4,9 @@ import 'ingredient.dart';
 
 part 'recipe.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class Recipe {
+  final String? id;
   final String name;
   final String description;
   final int servings;
@@ -15,6 +16,7 @@ class Recipe {
   final List<RecipeStep> steps;
 
   const Recipe({
+    required this.id,
     required this.name,
     required this.description,
     required this.servings,
@@ -27,6 +29,19 @@ class Recipe {
   factory Recipe.fromJson(Map<String, dynamic> json) => _$RecipeFromJson(json);
 
   Map<String, dynamic> toJson() => _$RecipeToJson(this);
+
+  Recipe copyWith({required String id}) {
+    return Recipe(
+      id: id,
+      name: name,
+      description: description,
+      servings: servings,
+      prepTime: prepTime,
+      cookTime: cookTime,
+      ingredients: ingredients,
+      steps: steps,
+    );
+  }
 }
 
 @JsonSerializable()

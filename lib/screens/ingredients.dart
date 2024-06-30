@@ -200,46 +200,51 @@ class _IngredientsScreenState extends ConsumerState<IngredientsScreen> {
     );
   }
 
-  ListView _buildIngredients(List<String> ingredients) {
-    return ListView.builder(
-      itemCount: ingredients.length + 1,
-      itemBuilder: (context, index) => index == ingredients.length
-          ? _buildIngredientTextField(ingredients)
-          : _buildIngredient(ingredients, index),
-    );
-  }
-
-  Column _buildCameraButtons() {
+  List<Widget> _buildMainView(List<String> ingredients) {
     final themeData = Theme.of(context);
-    return Column(
-      children: [
-        FloatingActionButton(
-          heroTag: UniqueKey(),
-          onPressed: _loading[ImageSource.gallery]! ? null : _pickFromGallery,
-          backgroundColor: _loading[ImageSource.gallery]!
-              ? Colors.grey[300]
-              : themeData.floatingActionButtonTheme.backgroundColor,
-          child: _loading[ImageSource.gallery]!
-              ? const Spinner(size: 20.0)
-              : const Icon(Icons.photo),
+    return [
+      ListView.builder(
+        itemCount: ingredients.length + 1,
+        itemBuilder: (context, index) => index == ingredients.length
+            ? _buildIngredientTextField(ingredients)
+            : _buildIngredient(ingredients, index),
+      ),
+      Positioned(
+        bottom: 24.0,
+        right: 24.0,
+        child: Column(
+          children: [
+            FloatingActionButton(
+              heroTag: UniqueKey(),
+              onPressed:
+                  _loading[ImageSource.gallery]! ? null : _pickFromGallery,
+              backgroundColor: _loading[ImageSource.gallery]!
+                  ? Colors.grey[300]
+                  : themeData.floatingActionButtonTheme.backgroundColor,
+              child: _loading[ImageSource.gallery]!
+                  ? const Spinner(size: 20.0)
+                  : const Icon(Icons.photo),
+            ),
+            if (!kIsWeb)
+              const SizedBox(
+                height: 16.0,
+              ),
+            if (!kIsWeb)
+              FloatingActionButton(
+                heroTag: UniqueKey(),
+                onPressed:
+                    _loading[ImageSource.camera]! ? null : _pickFromCamera,
+                backgroundColor: _loading[ImageSource.camera]!
+                    ? Colors.grey[300]
+                    : themeData.floatingActionButtonTheme.backgroundColor,
+                child: _loading[ImageSource.camera]!
+                    ? const Spinner(size: 20.0)
+                    : const Icon(Icons.photo_camera),
+              ),
+          ],
         ),
-        if (!kIsWeb)
-          const SizedBox(
-            height: 16.0,
-          ),
-        if (!kIsWeb)
-          FloatingActionButton(
-            heroTag: UniqueKey(),
-            onPressed: _loading[ImageSource.camera]! ? null : _pickFromCamera,
-            backgroundColor: _loading[ImageSource.camera]!
-                ? Colors.grey[300]
-                : themeData.floatingActionButtonTheme.backgroundColor,
-            child: _loading[ImageSource.camera]!
-                ? const Spinner(size: 20.0)
-                : const Icon(Icons.photo_camera),
-          ),
-      ],
-    );
+      ),
+    ];
   }
 
   @override
@@ -247,19 +252,11 @@ class _IngredientsScreenState extends ConsumerState<IngredientsScreen> {
     final ingredients = ref.watch(ingredientsProvider);
     return Stack(
       fit: StackFit.expand,
-      children: [
-        (switch (ingredients) {
-          AsyncLoading() => const Center(child: Spinner()),
-          AsyncData(:final value) when value != null =>
-            _buildIngredients(value),
-          _ => _buildIngredients([]),
-        }),
-        Positioned(
-          bottom: 24.0,
-          right: 24.0,
-          child: _buildCameraButtons(),
-        )
-      ],
+      children: (switch (ingredients) {
+        AsyncLoading() => [const Center(child: Spinner())],
+        AsyncData(:final value) when value != null => _buildMainView(value),
+        _ => _buildMainView([]),
+      }),
     );
   }
 }
