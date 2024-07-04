@@ -33,16 +33,17 @@ class GenerativeAIService {
   String _recipePrompt(List<String> ingredients, List<String> preferences) {
     return '''
       Generate a list of recipes using the given ingredients and dietary preferences.
-      Return your output in JSON format. Output no other text. If you can't generate
-      any recipes with the given constraints, output an empty JSON body ("{}"). Here
-      is an example:
+      You do not have to use all of the ingredients, but you must adhere to all of the
+      dietary preferences. Return your output in JSON format. Output no other text. If
+      you can't generate any recipes with the given constraints, output an empty JSON
+      body ("{}"). Here is an example:
       EXAMPLE_BEGIN
       INPUT: Generate a list of recipes using ['peanut butter', 'chocolate chips', 'bread']
       and dietary preferences ['vegan']:
       OUTPUT: $sampleRecipes
       EXAMPLE_END
-      Now, generate a list of recipes using $ingredients and dietary preferences
-      $preferences.
+      Now, generate a list of recipes using $ingredients and dietary preferences $preferences.
+      Try to come up with creative recipes that make maximum usage of the ingredients.
     ''';
   }
 
