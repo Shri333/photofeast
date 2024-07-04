@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../helpers/snackbar.dart';
 import '../helpers/window.dart';
+import '../providers/user.dart';
 
 enum HomeRoute {
   ingredients(name: 'Ingredients', iconData: Icons.kitchen),
@@ -32,7 +35,7 @@ enum HomeRoute {
   }
 }
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({
     super.key,
     required this.routerState,
@@ -43,15 +46,20 @@ class HomeScreen extends StatefulWidget {
   final Widget child;
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _index = 0;
 
   @override
   void initState() {
     super.initState();
+    final user = ref.read(userProvider);
+    if (user case AsyncData(:final value)
+        when value != null && !value.emailVerified) {
+      showSnackBar(context, 'Please verify your email');
+    }
     _handlePath();
   }
 
