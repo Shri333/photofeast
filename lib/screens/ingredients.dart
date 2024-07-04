@@ -94,13 +94,16 @@ class _IngredientsScreenState extends ConsumerState<IngredientsScreen> {
 
   Future<void> _generateIngredients(Uint8List image) async {
     try {
-      final oldIngredients = ref.read(ingredientsProvider);
+      final List<String> oldIngredients =
+          switch (ref.read(ingredientsProvider)) {
+        AsyncData(:final value) when value != null => value,
+        _ => [],
+      };
       final newIngredients =
           await _generativeAIService.generateIngredients(image);
-      if (oldIngredients case AsyncData(:final value)
-          when value != null && newIngredients != null) {
+      if (newIngredients != null) {
         _withFirebaseErrorHandling(
-          () => _ingredientsService.addItems(value, newIngredients),
+          () => _ingredientsService.addItems(oldIngredients, newIngredients),
         );
       } else if (mounted) {
         showErrorAlert(context, 'Failed to find ingredients in image');
