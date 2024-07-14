@@ -70,6 +70,9 @@ class DefaultFirebaseOptions {
     messagingSenderId: '202689525822',
     projectId: 'photofeast-1',
     storageBucket: 'photofeast-1.appspot.com',
+    androidClientId: '202689525822-cqe7rvarubc0cc0bp3bg8b532kjbpafc.apps.googleusercontent.com',
+    iosClientId: '202689525822-0m0kkli0atp8hk1l7392gfv9qdf01s17.apps.googleusercontent.com',
     iosBundleId: 'com.example.photofeast',
   );
+
 }
